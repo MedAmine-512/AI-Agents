@@ -1,0 +1,12 @@
+ollama>=0.4.0
+pydantic>=2.10.0
+requests
+psutil
+PyPDF2
+python-docx
+streamlit
+google-api-python-client  
+google-auth-oauthlib      
+beautifulsoup4           
+langchain                
+chromadb                  
