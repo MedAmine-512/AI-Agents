@@ -2,6 +2,7 @@ import streamlit as st
 import ollama
 import os
 from summarize import get_system_stats, list_files, summarize_directory, read_specific_file, triage_emails
+from monitor import manage_tasks 
 
 st.set_page_config(page_title="AI Agent OS Supervisor", page_icon="🤖", layout="wide")
 
@@ -15,16 +16,16 @@ with st.sidebar:
         st.write(stats)
     
     st.divider()
-    st.info("Agents disponibles : Supervisor, Summarizer, Email Triage (Study)")
+    st.info("Agents disponibles : Supervisor, Summarizer, Email Triage (Study), Task Manager")
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {
             "role": "system", 
             "content": (
-                "Tu es un assistant IA polyvalent nommé R-Bot. "
-                "Tu fonctionnes à la fois comme un Chatbot (discussion libre) et un Agent (exécution de tâches). "
-                "Si l'utilisateur pose une question générale, réponds directement. "
+                "Tu es un assistant IA polyvalent nommé TalentAI-Bot. "
+                "Tu peux fonctionner comme un Chatbot (discussion libre) ou comme un Agent (exécution de tâches). "
+                "Tu as accès à 'manage_tasks' pour ajouter ('add') ou lister ('list') des rappels dans reminders.txt. "
                 "Si l'utilisateur mentionne 'mails', 'messages', 'emails' ou 'courriels', "
                 "tu dois EXCLUSIVEMENT utiliser l'outil 'triage_emails'. "
                 "N'essaie jamais d'utiliser 'list_files' ou 'summarize_directory' pour les emails."
@@ -37,14 +38,21 @@ for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-if prompt := st.chat_input("Comment puis-je vous aider avec vos fichiers ?"):
+if prompt := st.chat_input("Comment puis-je vous aider avec vos fichiers ou vos tâches ?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
         with st.spinner("L'agent réfléchit..."):
-            available_tools = [get_system_stats, list_files, summarize_directory, read_specific_file, triage_emails]
+            available_tools = [
+                get_system_stats, 
+                list_files, 
+                summarize_directory, 
+                read_specific_file, 
+                triage_emails,
+                manage_tasks
+            ]
             
             response = ollama.chat(
                 model="llama3.2", 
@@ -64,6 +72,7 @@ if prompt := st.chat_input("Comment puis-je vous aider avec vos fichiers ?"):
                     elif name == "summarize_directory": result = summarize_directory(**args)
                     elif name == "read_specific_file": result = read_specific_file(**args)
                     elif name == "triage_emails": result = triage_emails(**args)
+                    elif name == "manage_tasks": result = manage_tasks(**args)
                     else: result = f"Outil '{name}' inconnu."
                     
                     st.session_state.messages.append({'role': 'tool', 'content': result})
